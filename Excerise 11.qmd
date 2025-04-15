@@ -1,0 +1,56 @@
+---
+title: "Exercise-11"
+format: html
+editor: visual
+---
+
+## Practice Model Selection
+
+### Step 1. Loading in data set and replacing all values (-999) with NA
+
+```{r}
+
+library(tidyverse)
+library(broom)
+library(MuMIn)
+library(skimr)
+
+f <- "https://raw.githubusercontent.com/difiore/ada-datasets/main/Mammal_lifehistories_v2.txt"
+d <- read_tsv(f, col_names = TRUE)
+
+head(d)
+
+skim(d)
+```
+
+##### after some exploratory analysis using the skimr () package we see that family ,species, and genus are categorical and the rest are numeric variables . 
+
+#### replacing the -999 values with NA 
+
+```{r}
+
+library(naniar) #trying the naninar package with the replace_wiiht_na_all function
+
+d <- d %>% replace_with_na_all(condition = ~.x == -999)
+
+head(d) # we see that it worked ! 
+```
+
+### Step 2. Drop the Variables litter size and refs
+
+```{r}
+
+d <- d |> select(-c("litter size", "refs"))
+
+d # it has been dropped
+```
+
+### Step 3. log transform all of the other numeric variables.
+
+```{r}
+library(dplyr)
+d <- d |> mutate(across(where(is.numeric), log))
+d # checking work yes we did log transfolrm all of the numeric variables
+```
+### Step 4. Regress the (now log transformed) age [gestation(mo), weaning(mo), AFR(mo) (i.e., age at first reproduction), and max. life(mo) (i.e., maximum lifespan)] and mass [newborn(g) and wean mass(g)] variables on (now log transformed) overall body mass(g)
+
