@@ -42,7 +42,8 @@ head(d) # we see that it worked !
 library(dplyr)
 library(tidyverse)
 
-d <- d %>% dplyr::select(-c("litter size", "refs"))
+cols_to_remove <- c("litter size", "refs")
+d <- d %>% dplyr::select(-all_of(cols_to_remove))
 
 d # it has been dropped
 ```
@@ -52,7 +53,7 @@ d # it has been dropped
 ```{r}
 library(dplyr)
 d <- d |> mutate(across(where(is.numeric), log))
-d # checking work yes we did log transform all of the numeric variables
+d # checking work, yes we did log transform all of the numeric variables
 ```
 
 ### Step 4. Regress the (now log transformed) age \[gestation(mo), weaning(mo), AFR(mo) (i.e., age at first reproduction), and max. life(mo) (i.e., maximum lifespan)\] and mass \[newborn(g) and wean mass(g)\] variables on (now log transformed) overall body mass(g)
@@ -101,7 +102,7 @@ Box1
 
 ```
 
-#### Which mammalian orders have the highest residual lifespan? Primates
+##### Which mammalian orders have the highest residual lifespan? **Primates**
 
 ### 2.Plot residuals of newborn mass (relNewbornMass) in relation to Order.
 
@@ -123,7 +124,7 @@ Box2
 
 ```
 
-#### Which mammalian orders have the have highest residual newborn mass? Macroscelidae is in first place but is very close with Cetacea based off the boxplot
+##### Which mammalian orders have the have highest residual newborn mass? Macroscelidae is in first place but is very close with Cetacea based off the boxplot
 
 ### 3. Plot residuals of weaning mass (relWeaningMass) in relation to Order
 
@@ -145,18 +146,9 @@ Box3
 
 ##### Which mammalian orders have the have highest residual weaning mass? Perissodactyla noticeably highest residual weaning mass compared to the rest
 
-# Step 6. 
+# Step 6.
+
 Run models and a model selection process to evaluate what (now log transformed) variables best predict each of the two response variables, max. life(mo) and AFR(mo), from the set of the following predictors: gestation(mo), newborn(g), weaning(mo), wean mass(g), litters/year, and overall body mass(g).
-
-```{r}
-d1 <- d |> drop_na(c("max. life(mo)", "gestation(mo)", "newborn(g)", "weaning(mo)", "wean mass(g)", "litters/year", "mass(g)"))
-ML_full <- lm(`max. life(mo)` ~ `gestation(mo)` + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `litters/year` + `mass(g)`, data = d1, na.action = na.fail)
-ML_null <- lm(`max. life(mo)` ~ 1, data = d1, na.action = na.fail)
-add1(ML_null, .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
-
-f2 <- update(ML_null, .~. + `gestation(mo)`)
-add1(f2, .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
-```
 
 ### Maximum Lifespan
 
@@ -179,11 +171,12 @@ null_life <- lm(`max. life(mo)` ~ 1, data = life_data)
 
 null_life
 
-# Step 1: Test adding each predictor individually to the null model
+#  adding each predictor individually to the null model
 add1(null_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
      `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 
 ```
+
 Based on the results `gestation(mo)` has the highest F statistic (457.45) and lowest RSS (-273.94). Update our model and add this predictor
 
 ```{r}
@@ -193,7 +186,8 @@ add1(m1_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` +
      `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 
 ```
-Based on the results `litters/year` has the highest new F stat (43.4095) and new lowest RSS (45.661); update our model and add this predictor 
+
+Based on the results `litters/year` has the highest new F stat (43.4095) and new lowest RSS (45.661); update our model and add this predictor
 
 ```{r}
 m2_life <- update(m1_life, formula = .~. + `litters/year`)
@@ -201,7 +195,8 @@ m2_life <- update(m1_life, formula = .~. + `litters/year`)
 add1(m2_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
      `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 ```
-According to the results the next highest F value (15.98) and lowest RSS (-325) is 'mass(g)'; update our model and add out predictor 
+
+According to the results the next highest F value (15.98) and lowest RSS (-325) is 'mass(g)'; update our model and add out predictor
 
 ```{r}
 m3_life <- update(m2_life, formula = .~. + `mass(g)`)
@@ -209,7 +204,8 @@ m3_life <- update(m2_life, formula = .~. + `mass(g)`)
 add1(m3_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
      `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 ```
-According to the results the next highest F value (7.32) and lowest RSS (-330)is `weanning(mo)` update our model and add our predictor 
+
+According to the results the next highest F value (7.32) and lowest RSS (-330)is `weanning(mo)` update our model and add our predictor
 
 ```{r}
 m4_life <- update(m3_life, formula = .~. + `weaning(mo)`)
@@ -217,7 +213,8 @@ m4_life <- update(m3_life, formula = .~. + `weaning(mo)`)
 add1(m4_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
     `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 ```
-Based off of these results there are no other variables to add that would improve the fit of the model significantly so the final best model is m4_life : `max. life(mo)` ~ `gestation(mo)` + `litters/year` + `mass(g)` +   `weaning(mo)`
+
+Based off of these results there are no other variables to add that would improve the fit of the model significantly so the final best model is m4_life : `max. life(mo)` \~ `gestation(mo)` + `litters/year` + `mass(g)` + `weaning(mo)`
 
 ```{r}
 library(MuMIn)  
@@ -235,6 +232,7 @@ all_possible_models
 top_10_models <- head(coef(all_possible_models), 10)
 
 top_10_models 
+
 #model averaging on models with delta AIC < 4
 models_within_4_AIC <- subset(all_possible_models, delta < 4)
 models_within_4_AIC
@@ -256,19 +254,21 @@ plot(averaged_model, full = TRUE, intercept = FALSE)
 
 -   gestation(mo) , litters/year , weaning(mo) , and mass(g) are included in all of this set of "top" models that have a delta AICCc less than 4
 
-
-- Based on my graph : The variables that have confidence intervals not crossing zero are statistically significant predictors of maximum lifespan: **Gestation (mo)**, **Litters/year**, **Mass(g)**,**Weaning(mo)**: This matches what I got when I did my forward selection!!
+-   Based on my graph : The variables that have confidence intervals not crossing zero are statistically significant predictors of maximum lifespan: **Gestation (mo)**, **Litters/year**, **Mass(g)**,**Weaning(mo)**: This matches what I got when I did my forward selection!!
 
 ### Age at First Reproduction
 
 #### using forward step wise model selection
 
 ```{r}
-
+# dropping NAs in  Age at first repro model
 AFR_data<- d |> drop_na(c("AFR(mo)", "gestation(mo)", "newborn(g)", "weaning(mo)", "wean mass(g)", "litters/year", "mass(g)"))
 
+# Forward selection for maximum lifespan model
+# Start with null model
 AFR_null <- lm(`AFR(mo)` ~ 1, data = AFR_data, na.action = na.fail)
 
+#  adding each predictor individually to the null model
 add1(AFR_null, .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `litters/year` + `mass(g)`, test = "F")
 
 ```
@@ -281,7 +281,8 @@ AFR_m1 <-  update(AFR_null,.~. + `litters/year`)
 add1(AFR_m1, .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `mass(g)`, test = "F")
 
 ```
-`gestation(mo)` has the next highest  F value (139.303) and smallest RSS (73.622) so we will update accordingly
+
+`gestation(mo)` has the next highest F value (139.303) and smallest RSS (73.622) so we will update accordingly
 
 ```{r}
 AFR_m2 <-  update(AFR_m1,.~. + `gestation(mo)`)
@@ -291,7 +292,7 @@ add1(AFR_m2, .~. + `newborn(g)` + `weaning(mo)` + `wean mass(g)` + `mass(g)`, te
 
 ```
 
-`Wean mass(g)` has the largest F value (5.49) and smallest RSS (72.09), so we will add and update our  model
+`Wean mass(g)` has the largest F value (5.49) and smallest RSS (72.09), so we will add and update our model
 
 ```{r}
 AFR_m3 <-  update(AFR_m2,.~. + `wean mass(g)`)
@@ -308,35 +309,39 @@ add1(AFR_m4, .~. + `newborn(g)` +  `mass(g)`, test = "F")
 
 ```
 
-That is it no more to add.
+That is it, no more predictors to add that would add significant explanatory power.
 
-according to F tests as criterion for model testing, forward selection tells us our best model is :
+according to F tests as criterion for model testing, forward selection tells us our best model is AFR_m3:
 
 AFR(mo)`~`litters/year`+`gestation(mo)`+`wean mass(g)`+`weaning(mo)\`
 
 ### AIC
+
 ```{r}
 
-# Step 1: Generate all possible models from the full AFR model
+#  all possible models 
 AFR_all_models <- dredge(AFR_full)
 
-# Step 2: top 10 models based on AIC ranking
+# top 10 models based on AIC 
 
 top_10_AFR_models <- head(coef(AFR_all_models), 10)
 top_10_AFR_models
 
-# Step 3: Perform model averaging on models withd elta AIC < 4
+# model averaging on models with delta AIC < 4
 AFR_averaged_model <- model.avg(AFR_all_models, subset = delta < 4)
 AFR_results <- summary(AFR_averaged_model)
 AFR_results
 
 
-# Step 5: plot 
+# plot 
 plot(AFR_averaged_model, full = TRUE, intercept = FALSE,
      main = "Model-averaged effects on age at first reproduction")
 ```
+
 -   According to AIC the best model is AFR(mo)`~`gestation(mo`+`litters/year`+` mass(g)`+`weaning(mo)
 
 -   7 models have a delta AICc of less than 4
 
-- According to the plot the top modesl only include 3 predictors whose 95% CI does not have 0 : gestation(mo), litters/year, weaning(mo) 
+-   we see that 'gestation(m0)`,`litters/year`show up in all top 10 AFR models,`weaning(mo)`shows up in  all the models whose AICc delta is <4 ; and`mass(g)\` shoes up in 4/5 of the top models whose delta AICc is \<4.
+
+-   According to the plot the top models only include 3 predictors whose 95% CI does not have 0 : gestation(mo), litters/year, weaning(mo)
