@@ -216,13 +216,15 @@ add1(m4_life, scope = .~. + `gestation(mo)` + `newborn(g)` + `weaning(mo)` +
 
 Based off of these results there are no other variables to add that would improve the fit of the model significantly so the final best model is m4_life : `max. life(mo)` \~ `gestation(mo)` + `litters/year` + `mass(g)` + `weaning(mo)`
 
+### AIC
+
 ```{r}
 library(MuMIn)  
 
 
 Life_full <- lm(`max. life(mo)` ~ `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
                 `wean mass(g)` + `litters/year` + `mass(g)`, 
-                data = d1, na.action = na.fail)
+                data = life_data, na.action = na.fail)
 
 # generate all possible models 
 all_possible_models <- dredge(Life_full)
@@ -261,6 +263,10 @@ plot(averaged_model, full = TRUE, intercept = FALSE)
 #### using forward step wise model selection
 
 ```{r}
+
+library(tidyr)
+library(MASS)
+
 # dropping NAs in  Age at first repro model
 AFR_data<- d |> drop_na(c("AFR(mo)", "gestation(mo)", "newborn(g)", "weaning(mo)", "wean mass(g)", "litters/year", "mass(g)"))
 
@@ -318,6 +324,12 @@ AFR(mo)`~`litters/year`+`gestation(mo)`+`wean mass(g)`+`weaning(mo)\`
 ### AIC
 
 ```{r}
+
+library(MuMIn)
+library(MASS)
+
+AFR_full <- lm(`AFR(mo)` ~ `gestation(mo)` + `newborn(g)` + `weaning(mo)` + 
+    `wean mass(g)` + `litters/year` + `mass(g)`, data = AFR_data, na.action = na.fail)
 
 #  all possible models 
 AFR_all_models <- dredge(AFR_full)
